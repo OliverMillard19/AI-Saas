@@ -1,51 +1,50 @@
-"use client"
+"use client";
 import * as z from "zod";
 
 import {Heading} from "@/components/heading"
-import {MessageSquare} from "lucide-react";
+import {ImageIcon, Download} from "lucide-react";
 import {useForm} from "react-hook-form";
-import {formSchema} from "./constants"
+import {amountOptions, formSchema, resolutionOptions} from "./constants"
 import {zodResolver} from "@hookform/resolvers/zod";
 import {Form, FormControl, FormField, FormItem} from "@/components/ui/form";
 import {Input} from "@/components/ui/input";
 import {Button} from "@/components/ui/button";
 import {useRouter} from "next/navigation";
-import { ChatCompletionRequestMessage } from "openai";
 import {useState} from "react";
 import axios from "axios";
 import {Empty} from "@/components/empty";
 import {Loader} from "@/components/loader";
-import {cn} from "@/lib/utils";
-import {UserAvatar} from "@/components/user-avatar";
-import {BotAvatar} from "@/components/bot-avatar";
+import {SelectContent, SelectTrigger, Select, SelectValue, SelectItem} from "@/components/ui/select";
+import {Card, CardFooter} from "@/components/ui/card";
+import Image from "next/image";
 
-const ConversationPage = () => {
+
+
+const ImagePage = () => {
 
     const router = useRouter();
-    const [messages, setMessages] = useState<ChatCompletionRequestMessage[]>([]);
+    const [images,setImages] = useState<string[]>([])
     const form = useForm<z.infer<formSchema>>({
         resolver: zodResolver(formSchema),
         defaultValues: {
-            prompt: ""
+            prompt: "",
+            amount: "1",
+            resolution: "512x512"
         }
     });
 
     const isLoading = form.formState.isSubmitting;
     const onSubmit = async (values: z.infer<typeof formSchema>) => {
         try{
+            setImages([]);
+            const response = await axios.post("/api/image", values);
 
-            const userMessage: ChatCompletionRequestMessage = {
-                role: "user",
-                content: values.prompt,
-            };
-            const newMessage = [...messages, userMessage];
+            const urls = response.data.map((image: {url: string}) => image.url);
 
-            const response = await axios.post("/api/conversation", {messages: newMessage});
-            setMessages((current) => [...current, userMessage, response.data]);
-
+            setImages(urls);
             form.reset();
 
-        } catch (error: any){
+        } catch (error: Error){
             //open pro model
             console.log(error)
         } finally {
@@ -56,17 +55,17 @@ const ConversationPage = () => {
     return(
         <div>
             <Heading
-                title="Conversation"
-                description="Our Most advanced conversation model"
-                icon={MessageSquare}
-                iconColor="text-violet-500"
-                bgColor="bg-violet-500/10"
+                title="Image Generation"
+                description="Turn your prompt into an image"
+                icon={ImageIcon}
+                iconColor="text-pink-700"
+                bgColor="bg-pink-700/10"
             />
-            <div className="px-4 lg:px-8">
-                <div>
-                    <Form {...form}>
 
-                        <form onSubmit={form.handleSubmit(onSubmit)}
+            <div className="px-4 lg:px-8">
+                <Form {...form}>
+                    {({ formProps }) => (
+                    <form onSubmit={form.handleSubmit(onSubmit)} {...formProps}
                         className="rounded-lg
                         border
                         w-full
@@ -77,16 +76,84 @@ const ConversationPage = () => {
                         grid
                         grid-cols-12
                         gap-2"
-                        >
-                            <FormField name="prompt"
+                    >
+                        <FormField
+                            name="prompt"
                             render={({field}) => (
-                                <FormItem className="col-span-12 lg:col-span-10">
+                                <FormItem className="col-span-12 lg:col-span-6">
                                     <FormControl className="m-0 p-0">
                                         <Input
                                         className="border-0 outline-none focus-visible:ring-0 focus-visible:ring-transparent"
                                         disabled={isLoading}
-                                        placeholder="How fast is the speed of light?"
+                                        placeholder="A picture of a dog in france"
                                         {...field}
+                                        />
+                                        <FormField
+                                            control={form.control}
+                                            name="amount"
+                                            render={({field}) => (
+                                            <FormItem className="col-span-12 lg:col-span-2">
+                                                <Select
+                                                disabled={isLoading}
+                                                onValueChange={field.onChange}
+                                                value={field.value}
+                                                defaultValue={field.value}
+                                                >
+                                                    <FormControl>
+                                                        <SelectTrigger>
+                                                            <SelectValue defaultValue={field.value}/>
+                                                        </SelectTrigger>
+                                                    </FormControl>
+                                                    <SelectContent>
+                                                        {amountOptions.map((option) => (
+                                                            <SelectItem
+                                                            key={option.value}
+                                                            value={option.value}
+                                                            >
+                                                                {option.label}
+
+                                                            </SelectItem>
+
+                                                        ))}
+                                                    </SelectContent>
+
+                                                </Select>
+
+                                            </FormItem>
+                                          )}
+                                        />
+                                        <FormField
+                                            control={form.control}
+                                            name="resolution"
+                                            render={({field}) => (
+                                            <FormItem className="col-span-12 lg:col-span-2">
+                                                <Select
+                                                    disabled={isLoading}
+                                                    onValueChange={field.onChange}
+                                                    value={field.value}
+                                                    defaultValue={field.value}
+                                                >
+                                                    <FormControl>
+                                                        <SelectTrigger>
+                                                            <SelectValue defaultValue={field.value}/>
+                                                        </SelectTrigger>
+                                                    </FormControl>
+                                                    <SelectContent>
+                                                        {resolutionOptions.map((option) => (
+                                                            <SelectItem
+                                                                key={option.value}
+                                                                value={option.value}
+                                                            >
+                                                                {option.label}
+
+                                                            </SelectItem>
+                                                        ))}
+                                                    </SelectContent>
+
+                                                </Select>
+
+                                            </FormItem>
+                                        )}
                                         />
 
                                     </FormControl>
@@ -96,43 +163,47 @@ const ConversationPage = () => {
                             <Button className="col-span-12 lg:col-span-2 w-full" disabled={isLoading}>
                                 Generate
                             </Button>
-
-
-                        </form>
-
-
-                    </Form>
-                </div>
+                    </form>
+                 )}
+                </Form>
+            </div>
                 <div className="space-y-4 mt-4">
                     {isLoading && (
-                        <div className="p-8 rounded-lg w-full flex items-center justify-center bg-muted">
+                        <div className="p-20">
                             <Loader/>
                         </div>
                     )}
-                    {messages.length === 0 && !isLoading && (
-                        <Empty labe="No conversation started"/>
+                    {images.length === 0 && !isLoading && (
+                        <Empty label="No images generated"/>
                     )}
-                    <div className="flex flex-col-reverse gap-y-4">
-                        {messages.map((message) => (
-                            <div key={message.content}
-                                 className={cn("p-8 w-full flex items-start gap-x-8 rounded-lg",
-                                     message.role === "user"?"bg-white border border-black/10" : "bg-muted")}
-                            >
-                                {message.role === "user" ? <UserAvatar/> : <BotAvatar/>}
-                                <p className="text-sm">
-                                    {message.content}
-                                </p>
-                            </div>
-                        ))}
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 mt-8">
+                        {images.map((src) =>
+                        <Card
+                        key={src}
+                        className="rounded-lg overflow-hidden"
+                        >
+                            <div className="relative aspect-square">
+                                <Image
+                                alt="image"
+                                fill
+                                src={src}
+                                />
+                                <CardFooter className="p-2">
+                                    <Button onClick={() => window.open(src)} variant="secondary" className="w-full">
+                                        <Download className="h-4 w-4 mr-2"/>
+                                        Download
 
+                                    </Button>
+
+                                </CardFooter>
+                            </div>
+
+                        </Card>
+                        )}
                     </div>
                 </div>
-
-                
-            </div>
-
-        </div>
-    );
+       </div>
+  );
 }
 
-export default ConversationPage;
+export default ImagePage;

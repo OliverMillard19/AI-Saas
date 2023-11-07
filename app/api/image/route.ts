@@ -1,6 +1,7 @@
 import {Configuration, OpenAIApi} from "openai";
 import {NextResponse} from "next/server";
 import {auth} from "@clerk/nextjs";
+import {increaseAPILimit, checkApiLimit} from "@/lib/api-limit";
 
 const configuration = new Configuration({
     apiKey: process.env.OPENAI_API_KEY
@@ -15,7 +16,7 @@ export async function POST(
     try{
         const {userId} = auth();
         const body = await req.json();
-        const {messages} = body;
+        const {prompt, amount = 1, resolution = "512x512"} = body;
 
         if(!userId){
             return new NextResponse("Unauthorized", {status: 401});
@@ -26,21 +27,40 @@ export async function POST(
             return new NextResponse("OpenAi API key not configured", {status: 500})
         }
 
-        if (!messages) {
-            return new NextResponse("Messages are required", {status: 400})
+        if (!prompt) {
+            return new NextResponse("prompt is required", {status: 400})
 
         }
+        if (!amount) {
+            return new NextResponse("amount is required", {status: 400})
 
-        const response = await openai.chat.completions.create({
-            model: "gpt-3.5-turbo",
-            messages,
+        }
+        if (!resolution) {
+            return new NextResponse("resolution is required", {status: 400})
+
+        }
+        const freeTrial = await checkApiLimit();
+
+        if (!freeTrial){
+            return new NextResponse("Free trial has expired", {status:403});
+        }
+
+        const response = await openai.createImage({
+            prompt,
+            n:parseInt(amount, 10),
+            size: resolution,
+
         });
 
-        return NextResponse.json(response.choices[0].messages);
+        await increaseAPILimit();
+
+        return NextResponse.json(response.data.data);
+
+
 
 
     } catch (error){
-        console.log("[CONVERSATION_ERROR]", error);
+        console.log("[IMAGE_ERROR]", error);
         return new NextResponse("Internal error", {status: 500});
     }
 }
