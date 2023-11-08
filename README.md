@@ -1,10 +1,14 @@
 Dependancies Used
 
- @clerk/nextjs@4.26.1
+clerk
 ├── @hookform/resolvers@3.3.0
+
 ├── @prisma/client@5.5.2
+
 ├── @radix-ui/react-avatar@1.0.3
+
 ├── @radix-ui/react-dialog@1.0.5
+
 ├── @radix-ui/react-label@2.0.2
 ├── @radix-ui/react-progress@1.0.3
 ├── @radix-ui/react-select@2.0.0
