@@ -76,10 +76,9 @@ export const ProModal = () => {
                             <div className="flex items-center gap-x-4">
                                 <div className={cn("p-2 w-fit rounded-md", tool.bgColor)}>
                                     <tool.icon className={cn("w-6 h-6", tool.color)}/>
-                                    <div className="font-semibold text-sm">
-                                        {tool.label}
-                                    </div>
-
+                                </div>
+                                <div className="font-semibold text-sm">
+                                    {tool.label}
                                 </div>
                             </div>
                             <Check className="text-primary w-5 h-5 "/>

@@ -5,6 +5,9 @@ import {ReactNode, useEffect, useState} from "react";
 import {Sheet, SheetTrigger, SheetContent} from "@/components/ui/sheet"
 import Sidebar from "@/components/sidebar"
 
+interface MobileSidebarProps{
+    apiLimitCount
+}
 
 
 const MobileSidebar = () => {
