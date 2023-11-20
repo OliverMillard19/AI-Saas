@@ -1,9 +1,9 @@
-import Stripe from "stripe";
+import Stripe from "stripe"
 import {headers} from "next/headers"
 import {NextResponse} from "next/server";
 import prismadb from "@/lib/prismadb";
 
-import {stripe} from "@/lib/utils";
+import {stripe} from "@/lib/stripe";
 
 
 export async function POST(req:Request){
@@ -22,7 +22,7 @@ export async function POST(req:Request){
         return new NextResponse(`Webhook Error: ${error.message}`, {status: 400});
     }
 
-    const session = event.data.object as Stripe.Checkout.Session:
+    const session = event.data.object as Stripe.Checkout.Session
 
     if (event.type === "checkout.session.completed"){
         const subscription = await stripe.subscriptions.retrieve(
@@ -38,7 +38,7 @@ export async function POST(req:Request){
                 stripeCustomerId: subscription.customer as string,
                 stripePriceId: subscription.items.data[0].price.id,
                 stripeCurrentPeriodEnd: new Date(
-                    subscription.current_period_end = 1000
+                    subscription.current_period_end * 1000
                 ),
             },
         });
