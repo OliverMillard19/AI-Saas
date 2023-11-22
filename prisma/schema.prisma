@@ -18,8 +18,8 @@ updatedAt DateTime @updatedAt
 
 model userSubscription{
 id String @id @default(cuid())
-userID String @unique
-stripeCustomerID String? @unique @map(name: "stripe_customer_id")
+userId String @unique
+stripeCustomerId String? @unique @map(name: "stripe_customer_id")
 stripeSubscriptionId String? @unique @map(name: "stripe_subscribe_id")
 stripePriceId String? @map(name: "stripe_price_id")
 stripeCurrentPeriodEnd DateTime? @map(name: "stripe_current_period_end")
